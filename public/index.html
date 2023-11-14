@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aplicação Planetária</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script>
+        function extrairIdDoPlaneta(planet) {
+            // Verificar se o planeta tem um ID falso
+            if (planet.id) {
+                return planet.id;
+            }
+
+            // Tentar extrair o ID da URL se estiver disponível
+            if (planet.url) {
+                const idRegex = /\/api\/planets\/(\d+)\//;
+                const match = planet.url.match(idRegex);
+                return match ? match[1] : 'ID desconhecido';
+            }
+
+            return 'ID não disponível';
+        }
+
+        async function listarPlanetas() {
+            const response = await fetch('/planets');
+            const data = await response.json();
+
+            let formattedResult = '';
+            if (data.results && data.results.length > 0) {
+                data.results.forEach(planet => {
+                    const planetId = extrairIdDoPlaneta(planet);
+                    formattedResult += `ID: ${planetId}\nNome: ${planet.name}\nRotação: ${planet.rotation_period}\nÓrbita: ${planet.orbital_period}\nDiâmetro: ${planet.diameter}\nClima: ${planet.climate}\nGravidade: ${planet.gravity}\nTerreno: ${planet.terrain}\nÁgua Superficial: ${planet.surface_water}\nPopulação: ${planet.population}\n\n`;
+                });
+            } else {
+                formattedResult = 'Nenhum planeta encontrado.';
+            }
+
+            document.getElementById('resultado').innerText = formattedResult;
+        }
+
+        async function buscarPlaneta() {
+        const input = document.getElementById('planetName').value;
+        let url = '/planets';
+
+        // Verifica se o valor inserido é um número (ID) ou uma string (nome)
+        if (!isNaN(input)) {
+            // Se for um número, considera como ID
+            url += `/${input}`;
+        } else if (input) {
+            // Se for uma string, considera como nome
+            url += `?name=${input}`;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        let formattedResult = '';
+        if (data.results && data.results.length > 0) {
+            data.results.forEach(planet => {
+                formattedResult += `Nome: ${planet.name}\n`;
+                formattedResult += `Rotação: ${planet.rotation_period}\n`;
+                formattedResult += `Órbita: ${planet.orbital_period}\n`;
+                formattedResult += `Diâmetro: ${planet.diameter}\n`;
+                formattedResult += `Clima: ${planet.climate}\n`;
+                formattedResult += `Gravidade: ${planet.gravity}\n`;
+                formattedResult += `Terreno: ${planet.terrain}\n`;
+                formattedResult += `Água Superficial: ${planet.surface_water}\n`;
+                formattedResult += `População: ${planet.population}\n\n`;
+            });
+        } else {
+            formattedResult = 'Planeta não encontrado.';
+        }
+
+        document.getElementById('resultado').innerText = formattedResult;
+    }
+        async function adicionarPlaneta() {
+            const nome = document.getElementById('novoPlanetaNome').value;
+            const response = await fetch('/planets', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: nome})
+            });
+            const data = await response.json();
+
+            document.getElementById('resultado').innerText = JSON.stringify(data, null, 2);
+            document.getElementById('novoPlanetaNome').value = ''; // Limpar o campo
+        }
+
+        async function removerPlaneta() {
+            const id = document.getElementById('removerPlanetaId').value;
+            const response = await fetch(`/planets/${id}`, { method: 'DELETE' });
+            const data = await response.json();
+
+            document.getElementById('resultado').innerText = JSON.stringify(data, null, 2);
+            document.getElementById('removerPlanetaId').value = ''; // Limpar o campo
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Aplicação Planetária</h1>
+
+        <button onclick="listarPlanetas()">Listar Todos os Planetas</button>
+        <br><br>
+
+        <input type="text" id="planetName" placeholder="Nome do Planeta">
+        <button onclick="buscarPlaneta()">Buscar Planeta por Nome</button>
+        <br><br>
+
+        <input type="text" id="novoPlanetaNome" placeholder="Nome do Novo Planeta">
+        <button onclick="adicionarPlaneta()">Adicionar Novo Planeta</button>
+        <br><br>
+
+        <input type="text" id="removerPlanetaId" placeholder="ID do Planeta a Remover">
+        <button onclick="removerPlaneta()">Remover Planeta</button>
+        <br><br>
+
+        <h2>Resultado:</h2>
+        <pre id="resultado"></pre>
+    </div>
+</body>
+</html>
